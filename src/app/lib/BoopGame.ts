@@ -1,16 +1,27 @@
 import { Cat, SizeType, Player } from "./definitions";
 
-class Game {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export class BoopGame {
 
-    gameGrid: Cat[][];
-    players: Player[];
-    static rowDirection: number[] = [-1,-1,-1,0,0,0,1,1,1]
-    static colDirection: number[] = [-1,0,1,-1,0,1,-1,0,1]
-    curPlayer = 0;
+    private gameGrid: Cat[][];
+    private players: Player[];
+    private curPlayer = 0;
 
-    constructor(){
-        this.gameGrid = new Array(6).fill(null).map(() => new Array(6).fill(null));
+    static rowDirection: number[] = [-1,-1,-1, 0,0,0, 1,1,1]
+    static colDirection: number[] = [-1, 0, 1,-1,0,1,-1,0,1]
+    
+
+    constructor(rows: number = 6, columns: number = 6, grid: Cat[][]|null = null){
+        this.gameGrid = grid != null ? grid : new Array(rows).fill(null).map(() => new Array(columns).fill(null));
         this.players = [ { id: "1", felines: { kittens: 8, cats: 0, totalBigCats: 0}}, { id: "2", felines: { kittens: 8, cats: 0, totalBigCats: 0}}];
+    }
+
+    getGrid(): Cat[][] {
+        return this.gameGrid;
+    }
+
+    getPlayer(playerNumber: number): Player {
+        return this.players[playerNumber];
     }
 
     /**
@@ -22,21 +33,21 @@ class Game {
      * @returns 
      */
     placeCat(size: SizeType, row: number, col: number, player: number) : boolean {
-        if(this.gameGrid[row][col] !== null){
+        if(this.gameGrid[row][col] == null){
             if(size == SizeType.kitten){
                 if(this.players[player].felines.kittens <= 0){
                     //throw error
-                    return false
+                    return false;
                 } else {
-                    this.players[player].felines.kittens--
+                    this.players[player].felines.kittens--;
                 }
             }
             else if(size == SizeType.cat){
                 if(this.players[player].felines.cats <= 0){
                     //throw error
-                    return false
+                    return false;
                 } else {
-                    this.players[player].felines.cats--
+                    this.players[player].felines.cats--;
                 }
             }
             const cat = {owner: player, size: size};
@@ -49,8 +60,8 @@ class Game {
     BoopAction(placedRow: number, placedCol: number, grid: Cat[][], size: SizeType): void{
         // Start top Left of a 3x3 grid
 
-        Game.rowDirection.forEach( row => {
-           Game.colDirection.forEach( col =>
+        BoopGame.rowDirection.forEach( row => {
+            BoopGame.colDirection.forEach( col =>
             {
                 if(row == 0 && col == 0){
                     return;
