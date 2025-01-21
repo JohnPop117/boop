@@ -15,7 +15,7 @@ jobs:
     - name: Install dependencies
       run: npm install
     - name: run test
-      run: npm test
+      run: npm run test
     - uses: actions/upload-artifact@v3
       if: always()
       with:
