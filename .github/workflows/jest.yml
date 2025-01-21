@@ -1,0 +1,30 @@
+name: CI Unit Test
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '23.x'
+    - name: Install dependencies
+      run: npm install
+    - name: run test
+      run: npm run test
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: coverage
+        path: coverage/
+        retention-days: 30
+    - uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test_results
+        path: test/.jest-test-results.json
+        retention-days: 30

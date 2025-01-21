@@ -1,0 +1,15 @@
+/* Grid.css */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-gap: 10px;
+    margin: auto;
+    width: 80%; /* 100% - 10% from each side */
+    height: 80vh; /* Optional: Adjust the height */
+  }
+  
+  .grid-item {
+    background-color: #ccc; /* Color of the squares */
+    padding-bottom: 100%; /* This creates a square by setting the height relative to width */
+    position: relative;
+  }
