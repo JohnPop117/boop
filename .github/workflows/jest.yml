@@ -1,4 +1,4 @@
-name: CI Build
+name: CI Unit Test
 on:
   push:
     branches: [ main ]
@@ -14,7 +14,7 @@ jobs:
         node-version: '23.x'
     - name: Install dependencies
       run: npm install
-- name: run test
+    - name: run test
       run: npm test
     - uses: actions/upload-artifact@v3
       if: always()
