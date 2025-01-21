@@ -1,6 +1,5 @@
 import { Cat, SizeType, Player } from "./definitions";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export class BoopGame {
 
     private gameGrid: Cat[][];
@@ -53,6 +52,7 @@ export class BoopGame {
             const cat = {owner: player, size: size};
             this.gameGrid[row][col] = cat;
             this.BoopAction(row, col, this.gameGrid, size);
+            return true;
         }
         return false;
     }
@@ -100,47 +100,59 @@ export class BoopGame {
     }
     
     outOfBounds(row: number, col: number): boolean {
-        if(row < 0 || row > 6 || col < 0 || col > 6){
+        if(row < 0 || row >= 6 || col < 0 || col >= 6){
             return true;
         }
         return false;
     }
     
-    moveCat(cat: Cat, adjacentR:number, adjacentC: number, newR:number, newC: number): void{
+    moveCat(cat: Cat, originalRow:number, originalCol: number, newR:number, newC: number): boolean{
+        if(this.gameGrid[newR][newC] != null || ( Math.abs(originalRow-newR) > 1 || Math.abs(originalCol-newC) > 1)){
+            return false;
+        }
         this.gameGrid[newR][newC] = cat;
-        this.gameGrid[adjacentR][adjacentC] = null;
-    
+        this.gameGrid[originalRow][originalCol] = null;
+        return true;
     }
     
-    ageCat(row: number, col: number): void{
+    ageCat(row: number, col: number): boolean{
         // TODO validate that there around enough cats to age
         if(this.gameGrid[row][col] == null)
         {
-            return;
+            return false;
         }
-        this.players[this.gameGrid[row][col].owner].felines.cats++
         if(this.gameGrid[row][col].size == SizeType.kitten)
         {
-            this.players[this.gameGrid[row][col].owner].felines.totalBigCats++
-        }
-    }
-    
-    checkWon(player: number): boolean{
-        // Has all 8 big cats placed
-        if(this.players[player].felines.cats == 0 && this.players[player].felines.totalBigCats == 8)
-        {
+            this.players[this.gameGrid[row][col].owner].felines.kittens--;
+            this.players[this.gameGrid[row][col].owner].felines.cats++;
+            this.players[this.gameGrid[row][col].owner].felines.totalBigCats++;
+            this.gameGrid[row][col].size = SizeType.cat;
             return true;
         }
+        return false;
+    }
     
+    checkWon(): number|undefined{
+        // Has all 8 big cats placed
+        for(let playerNum = 0; playerNum < 2; playerNum++){
+            if(this.players[playerNum].felines.cats == 0 && this.players[playerNum].felines.totalBigCats == 8)
+                {
+                    return playerNum;
+                }
+        }
+        
         // Check if there are 3 big cats in a row
-        for(let row: number = 0; row < 3; row++)
+        for(let row: number = 0; row < 4; row++)
         {
-            for(let col = 0; col < 3; col++)
+            for(let col = 0; col < 4; col++)
             {
-    
+                if(this.checkSW(row, col) || this.checkS(row, col) || this.checkSE(row, col) || this.checkE(row, col)){
+                    return this.gameGrid[row][col] ? this.gameGrid[row][col]?.owner : -1;
+                }
+
             }
         }
-        return false;
+        return -1;
     }
     
     
@@ -150,10 +162,10 @@ export class BoopGame {
         {
             return false
         }
-        this.curPlayer = this.gameGrid[row][col]?.owner ? 0 : 1;
-        if(this.gameGrid[row+1][col-1] && this.gameGrid[row+1][col-1]?.owner == this.curPlayer)
+        const player = this.gameGrid[row][col]?.owner;
+        if(this.gameGrid[row+1][col-1] && this.gameGrid[row+1][col-1]?.owner == player)
         {
-            if(this.gameGrid[row+2][col-2] && this.gameGrid[row+2][col-2]?.owner == this.curPlayer)
+            if(this.gameGrid[row+2][col-2] && this.gameGrid[row+2][col-2]?.owner == player)
             {
                 return true;
             }
@@ -163,14 +175,14 @@ export class BoopGame {
     
     checkS(row: number, col: number): boolean
     {
-        if(row + 2 > 0)
+        if(row + 2 > 6)
         {
             return false
         }
-        this.curPlayer = this.gameGrid[row][col]?.owner ? 0:1;
-        if(this.gameGrid[row+1][col] && this.gameGrid[row+1][col]?.owner == this.curPlayer)
+        const player = this.gameGrid[row][col]?.owner;
+        if(this.gameGrid[row+1][col] && this.gameGrid[row+1][col]?.owner == player)
         {
-            if(this.gameGrid[row+2][col] && this.gameGrid[row+2][col]?.owner == this.curPlayer)
+            if(this.gameGrid[row+2][col] && this.gameGrid[row+2][col]?.owner == player)
             {
                 return true;
             }
@@ -180,15 +192,21 @@ export class BoopGame {
     
     checkSE(row: number, col: number): boolean
     {
-        if(row + 2 > 0 || col + 2 < 0)
+        if(row + 2 > 5 || col + 2 > 5)
         {
             return false
         }
-        this.curPlayer = this.gameGrid[row][col]?.owner ? 0:1;
-        if(this.gameGrid[row+1][col+1] && this.gameGrid[row+1][col+1]?.owner == this.curPlayer)
+        const player = this.gameGrid[row][col]?.owner;
+        if(player == undefined){
+            return false;
+        }
+        console.log("Found cat");
+        if(this.gameGrid[row+1][col+1] && this.gameGrid[row+1][col+1]?.owner == player)
         {
-            if(this.gameGrid[row+2][col+2] && this.gameGrid[row+2][col+2]?.owner == this.curPlayer)
+            console.log("Found cat2");
+            if(this.gameGrid[row+2][col+2] && this.gameGrid[row+2][col+2]?.owner == player)
             {
+                console.log("Found cat3");
                 return true;
             }
         }
@@ -201,10 +219,10 @@ export class BoopGame {
         {
             return false
         }
-        this.curPlayer = this.gameGrid[row][col]?.owner ? 0:1;
-        if(this.gameGrid[row][col+1] && this.gameGrid[row][col+1]?.owner == this.curPlayer)
+        const player = this.gameGrid[row][col]?.owner;
+        if(this.gameGrid[row][col+1] && this.gameGrid[row][col+1]?.owner == player)
         {
-            if(this.gameGrid[row][col+2] && this.gameGrid[row][col+2]?.owner == this.curPlayer)
+            if(this.gameGrid[row][col+2] && this.gameGrid[row][col+2]?.owner == player)
             {
                 return true;
             }
