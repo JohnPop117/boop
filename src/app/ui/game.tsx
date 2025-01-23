@@ -1,11 +1,15 @@
 import React from 'react';
-import './Grid.css';
+import './game.css';
 
 const Grid = () => {
   return (
     <div className="grid-container">
       {[...Array(36)].map((_, index) => (
-        <div key={index} className="grid-item"></div>
+        <button key={index} type="button">
+            <img src='/square.png'></img>
+        </button>
+        // <div key={index} className="grid-item">
+        // </div>
       ))}
     </div>
   );

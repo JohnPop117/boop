@@ -152,6 +152,11 @@ test('checkWon returns true for 3 cats in a diagonal', () =>{
         [null, null, null, {owner:0, size: SizeType.cat}, null, null],
     ];
     const bg = new BoopGame(6,6,grid);
+    expect(bg.checkSW(0,0)).toBe(false);
+    expect(bg.checkS(0,0)).toBe(false);
+    expect(bg.checkSE(0,0)).toBe(false);
+    expect(bg.checkE(0,0)).toBe(false);
+
     expect(bg.checkWon()).toBe(0);
 });
 test('checkWon returns true for all cats placed', () =>{

@@ -1,6 +1,11 @@
-import { Cat, SizeType, Player } from "./definitions";
+import { Cat, SizeType, Player, defaultRows, defaultColumns, defaultKittens, checkResult, Direction } from "./definitions";
 
 export class BoopGame {
+
+    // TODO: If all 8 peices are on the board after booping and it is the players turn, they can either age a kitten or take a Cat off the board
+    // TODO: If 8 felines on the board and you have a 3 in a row after booping, only activate one option
+    // TODO: Return a checkResult to show all group of 3 felines to remove from the board
+
 
     private gameGrid: Cat[][];
     private players: Player[];
@@ -10,9 +15,10 @@ export class BoopGame {
     static colDirection: number[] = [-1, 0, 1,-1,0,1,-1,0,1]
     
 
-    constructor(rows: number = 6, columns: number = 6, grid: Cat[][]|null = null){
+    constructor(rows: number = defaultRows, columns: number = defaultColumns, grid: Cat[][]|null = null){
+
         this.gameGrid = grid != null ? grid : new Array(rows).fill(null).map(() => new Array(columns).fill(null));
-        this.players = [ { id: "1", felines: { kittens: 8, cats: 0, totalBigCats: 0}}, { id: "2", felines: { kittens: 8, cats: 0, totalBigCats: 0}}];
+        this.players = [ { id: "1", felines: { kittens: defaultKittens, cats: 0, totalBigCats: 0}}, { id: "2", felines: { kittens: defaultKittens, cats: 0, totalBigCats: 0}}];
     }
 
     getGrid(): Cat[][] {
@@ -52,6 +58,23 @@ export class BoopGame {
             const cat = {owner: player, size: size};
             this.gameGrid[row][col] = cat;
             this.BoopAction(row, col, this.gameGrid, size);
+            // Check if won
+            const winner = this.checkWon();
+            if(winner > 0){
+
+            }
+
+            // Check if 8 felines on the board to age/remove one
+            const allFelinesPlayed = this.players[this.curPlayer].felines.cats==0 && this.players[this.curPlayer].felines.kittens == 0;
+            // Check for 3
+            const groups = this.checkForThree();
+            if(groups.length > 0){
+                if(allFelinesPlayed){
+                    
+                }
+
+            }
+            // Show win or choose options from 8 or 3
             return true;
         }
         return false;
@@ -100,7 +123,7 @@ export class BoopGame {
     }
     
     outOfBounds(row: number, col: number): boolean {
-        if(row < 0 || row >= 6 || col < 0 || col >= 6){
+        if(row < 0 || row >= this.gameGrid.length || col < 0 || col >= this.gameGrid[0].length){
             return true;
         }
         return false;
@@ -132,7 +155,7 @@ export class BoopGame {
         return false;
     }
     
-    checkWon(): number|undefined{
+    checkWon(): number{
         // Has all 8 big cats placed
         for(let playerNum = 0; playerNum < 2; playerNum++){
             if(this.players[playerNum].felines.cats == 0 && this.players[playerNum].felines.totalBigCats == 8)
@@ -142,12 +165,12 @@ export class BoopGame {
         }
         
         // Check if there are 3 big cats in a row
-        for(let row: number = 0; row < 4; row++)
+        for(let row: number = 0; row < this.gameGrid.length; row++)
         {
-            for(let col = 0; col < 4; col++)
+            for(let col = 0; col < this.gameGrid[0].length; col++)
             {
                 if(this.checkSW(row, col) || this.checkS(row, col) || this.checkSE(row, col) || this.checkE(row, col)){
-                    return this.gameGrid[row][col] ? this.gameGrid[row][col]?.owner : -1;
+                    return this.gameGrid[row][col]!.owner;
                 }
 
             }
@@ -155,17 +178,44 @@ export class BoopGame {
         return -1;
     }
     
-    
+    checkForThree(): checkResult[]
+    {
+        const results: checkResult[] = [];
+        // Check if there are 3 big cats in a row
+        for(let row: number = 0; row < this.gameGrid.length-2; row++)
+        {
+            for(let col = 0; col < this.gameGrid[0].length-2; col++)
+            {
+                if(this.checkSW(row, col))
+                {
+                    results.push({row: row, col: col, direction: Direction.SW, owner: this.gameGrid[row][col]!.owner});
+                }
+                if(this.checkS(row, col))
+                {
+                    results.push({row: row, col: col, direction: Direction.S, owner: this.gameGrid[row][col]!.owner});
+                }
+                if(this.checkSE(row, col))
+                {
+                    results.push({row: row, col: col, direction: Direction.SE, owner: this.gameGrid[row][col]!.owner});
+                }
+                if(this.checkE(row, col))
+                {
+                    results.push({row: row, col: col, direction: Direction.E, owner:this.gameGrid[row][col]!.owner});
+                }
+            }
+        }
+        return results;
+    }
+
     checkSW(row: number, col: number): boolean
     {
-        if(row + 2 > 0 || col - 2 < 0)
+        if(row + 3 > this.gameGrid.length || col - 2 < 0 || this.gameGrid[row][col] == null)
         {
             return false
         }
-        const player = this.gameGrid[row][col]?.owner;
-        if(this.gameGrid[row+1][col-1] && this.gameGrid[row+1][col-1]?.owner == player)
+        if(this.gameGrid[row+1][col-1] && this.gameGrid[row+1][col-1]?.owner == this.curPlayer)
         {
-            if(this.gameGrid[row+2][col-2] && this.gameGrid[row+2][col-2]?.owner == player)
+            if(this.gameGrid[row+2][col-2] && this.gameGrid[row+2][col-2]?.owner == this.curPlayer)
             {
                 return true;
             }
@@ -175,14 +225,13 @@ export class BoopGame {
     
     checkS(row: number, col: number): boolean
     {
-        if(row + 2 > 6)
+        if(row + 3 > this.gameGrid.length || this.gameGrid[row][col] == null)
         {
             return false
         }
-        const player = this.gameGrid[row][col]?.owner;
-        if(this.gameGrid[row+1][col] && this.gameGrid[row+1][col]?.owner == player)
+        if(this.gameGrid[row+1][col] && this.gameGrid[row+1][col]?.owner == this.curPlayer)
         {
-            if(this.gameGrid[row+2][col] && this.gameGrid[row+2][col]?.owner == player)
+            if(this.gameGrid[row+2][col] && this.gameGrid[row+2][col]?.owner == this.curPlayer)
             {
                 return true;
             }
@@ -192,21 +241,14 @@ export class BoopGame {
     
     checkSE(row: number, col: number): boolean
     {
-        if(row + 2 > 5 || col + 2 > 5)
+        if(row + 3 > this.gameGrid.length || col + 3 > this.gameGrid[0].length || this.gameGrid[row][col] == null)
         {
             return false
         }
-        const player = this.gameGrid[row][col]?.owner;
-        if(player == undefined){
-            return false;
-        }
-        console.log("Found cat");
-        if(this.gameGrid[row+1][col+1] && this.gameGrid[row+1][col+1]?.owner == player)
+        if(this.gameGrid[row+1][col+1] && this.gameGrid[row+1][col+1]?.owner == this.curPlayer)
         {
-            console.log("Found cat2");
-            if(this.gameGrid[row+2][col+2] && this.gameGrid[row+2][col+2]?.owner == player)
+            if(this.gameGrid[row+2][col+2] && this.gameGrid[row+2][col+2]?.owner == this.curPlayer)
             {
-                console.log("Found cat3");
                 return true;
             }
         }
@@ -215,14 +257,13 @@ export class BoopGame {
 
     checkE(row: number, col: number): boolean
     {
-        if(col + 2 > 6)
+        if(col + 3 > this.gameGrid[0].length || this.gameGrid[row][col] == null)
         {
             return false
         }
-        const player = this.gameGrid[row][col]?.owner;
-        if(this.gameGrid[row][col+1] && this.gameGrid[row][col+1]?.owner == player)
+        if(this.gameGrid[row][col+1] && this.gameGrid[row][col+1]?.owner == this.curPlayer)
         {
-            if(this.gameGrid[row][col+2] && this.gameGrid[row][col+2]?.owner == player)
+            if(this.gameGrid[row][col+2] && this.gameGrid[row][col+2]?.owner == this.curPlayer)
             {
                 return true;
             }
