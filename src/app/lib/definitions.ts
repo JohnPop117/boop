@@ -26,3 +26,21 @@ export type Player = {
     id: string;
     felines: Felines;
 }
+
+export type checkResult = {
+    row: number;
+    col: number;
+    direction: Direction,
+    owner: number
+}
+
+export enum Direction {
+    SW,
+    S,
+    SE,
+    E
+}
+
+export const defaultRows = 6;
+export const defaultColumns = 6;
+export const defaultKittens = 8;

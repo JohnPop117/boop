@@ -2,10 +2,9 @@
 .grid-container {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    grid-gap: 10px;
+    grid-gap: 1px;
     margin: auto;
     width: 80%; /* 100% - 10% from each side */
-    height: 80vh; /* Optional: Adjust the height */
   }
   
   .grid-item {
