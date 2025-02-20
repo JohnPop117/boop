@@ -6,6 +6,7 @@ import Modal from 'react-modal';
 
 import { BoopGame } from '../lib/BoopGame';
 import { checkResult, SizeType, Direction } from '../lib/definitions';
+
 const bg = new BoopGame();
 enum cellState {
     square,
@@ -25,7 +26,7 @@ enum ActionState {
 
 Modal.setAppElement('body'); // This line is required for accessibility
 
-const CellButton = ({state, game, OpenCellMenu, OnClose, PlaceFeline, row, column, RemoveCatAction}:{state:cellState, game:BoopGame, OpenCellMenu:(row:number, columnn:number)=>void, OnClose:()=>void, PlaceFeline:(size:SizeType)=>void, row:number, column:number, RemoveCatAction:(row:number, columnn:number)=>void}) => (
+const CellButton = ({state, game, OpenCellMenu, OnClose, PlaceFeline, row, column, RemoveCatAction}:{state:cellState, game:BoopGame, OpenCellMenu:(row:number, columnn:number)=>void, OnClose:(row:number, column:number)=>void, PlaceFeline:(size:SizeType, rowIndex:number, columnIndex:number)=>void, row:number, column:number, RemoveCatAction:(row:number, columnn:number)=>void}) => (
     <div className="player-cat">
         { 
             game.getGrid()[row][column] !== null ? 
@@ -40,7 +41,7 @@ const CellButton = ({state, game, OpenCellMenu, OnClose, PlaceFeline, row, colum
                 <button className="grid-button" onClick={() => {OpenCellMenu(row, column)}}>
                     <Image width={100} height={100} src="/square.png" alt="Empty Square"  />
                 </button>  :
-            <CellMenu game={game} OnClose={OnClose} PlaceFeline={PlaceFeline}/>
+            <CellMenu game={game} OnClose={() =>OnClose(row, column)} rowIndex={row} columnIndex={column} PlaceFeline={PlaceFeline}/>
         }
     </div>
 )
@@ -72,35 +73,41 @@ const AgeSelection = ({ageCatsArray, ageCatButton, nextAgeGroup, ageCatAction, a
     </div>
 )
 
-const CellMenu = ({game, OnClose, PlaceFeline}:{game:BoopGame, OnClose:()=> void, PlaceFeline:(size:SizeType)=>void}) => (
+const CellMenu = ({game, rowIndex, columnIndex, OnClose, PlaceFeline}:{game:BoopGame, rowIndex:number, columnIndex:number, OnClose:(row:number, col:number)=> void, PlaceFeline:(size:SizeType, rowIndex:number, columnIndex:number)=>void}) => (
     <div className="player-cat">
         <p>
-        {game.getPlayer(game.getCurPlayer()).felines.kittens > 0 ? <button onClick={() =>{PlaceFeline(SizeType.kitten)} }>Kitten</button>:  false }
+        {game.getPlayer(game.getCurPlayer()).felines.kittens > 0 ? <button onClick={() =>{PlaceFeline(SizeType.kitten, rowIndex, columnIndex)} }>Kitten</button>:  false }
         </p>
         <p>
-        {game.getPlayer(game.getCurPlayer()).felines.cats > 0 ? <button onClick={() => {PlaceFeline(SizeType.cat)}}>Cat</button>: false}
+        {game.getPlayer(game.getCurPlayer()).felines.cats > 0 ? <button onClick={() => {PlaceFeline(SizeType.cat, rowIndex, columnIndex)}}>Cat</button>: false}
         </p>
-        <button className="grid-button" onClick={OnClose}>Close</button>
+        <button className="grid-button" onClick={() => OnClose(rowIndex, columnIndex)}>Close</button>
     </div>
 )
 
 const ReactBoopGame = () => {
-    let [selectedButton, setSelectedButton] = useState({row:0, column:0});
+    const [selectedButton, setSelectedButton] = useState({row:0, column:0});
     const [gridState, setGridState] = useState(Array(6).fill(Array(6).fill(cellState.square)))
     const [game, setGame] = useState(bg);
-    let [removeCat, setRemoveCat] = useState(false);
-    let [ageCats, setAgeCats] = useState(Array(0));
-    let [action, setAction] = useState(ActionState.place);
+    const [removeCat, setRemoveCat] = useState(false);
+    const [ageCats, setAgeCats] = useState(Array(0));
+    const [action, setAction] = useState(ActionState.place);
     const [selectionIndex, setSelectionIndex] = useState(0);
 
     const openCellMenu = async (row:number, column:number) => {
-        closeCellMenu()
-        selectedButton = {row:row, column:column};
-        setSelectedButton(selectedButton);
+        
+      setGridState(prevGridState => {
+        const newGridState = prevGridState.map(row => row.slice());
+            newGridState[selectedButton.row][selectedButton.column] = cellState.square;
+        return newGridState;
+      });
+
+      const button = {row,column};
+      setSelectedButton(button);
         setGridState(prevGridState => {
             const newGridState = prevGridState.map(row => row.slice());
 
-            newGridState[selectedButton.row][selectedButton.column] = cellState.menu;
+            newGridState[button.row][button.column] = cellState.menu;
             return newGridState;
           });
     }
@@ -128,12 +135,13 @@ const ReactBoopGame = () => {
         
     }
 
-    const closeCellMenu = () => {
-        console.info("test2");
-        gridState[selectedButton.row][selectedButton.column] = cellState.square;
-        setGridState(gridState);
-        selectedButton = {row:selectedButton.row, column:selectedButton.column};
-        setSelectedButton(selectedButton);
+    const closeCellMenu = (rowIndex:number, columnIndex:number) => {
+        setSelectedButton({row:rowIndex, column:columnIndex});
+        setGridState(prevGridState => {
+          const newGridState = prevGridState.map(row => row.slice());
+              newGridState[rowIndex][columnIndex] = cellState.square;
+          return newGridState;
+        });
     }
 
     const Restart = ({text}:{text:string}) => (
@@ -155,39 +163,49 @@ const WonWindow = () => (
   </Modal>
 );
 
-    const placeFeline = (size: SizeType) =>{
-        if(game.placeCat(size, selectedButton.row, selectedButton.column, bg.getCurPlayer())){
+    const placeFeline = (size: SizeType, rowIndex:number, columnIndex:number) =>{
+        if(game.placeCat(size, rowIndex, columnIndex, bg.getCurPlayer())){
             const winner = game.checkWon();
             if(winner > 0)
             {
-                action=ActionState.gameover;
                 setAction(ActionState.gameover);
-                // show win screen with winner and replay button
             } else // no winner
             {
-                ageCats = game.checkForThree();
-                removeCat = game.needToRemoveCat();
-                setRemoveCat(game.needToRemoveCat())
-                setAgeCats(game.checkForThree());
-                if(ageCats.length == 0 && !removeCat) {
+                const catsToAge = game.checkForThree();
+                const shouldRemoveCat = game.needToRemoveCat();
+                setRemoveCat(shouldRemoveCat)
+                setAgeCats(catsToAge);
+                if(catsToAge.length == 0 && !shouldRemoveCat) {
+                    setAction(ActionState.place)
                     game.nextPlayer();
                 } else {
-                    action = ActionState.pending;
                     setAction(ActionState.pending);
                 }
             }
-            gridState[selectedButton.row][selectedButton.column] = cellState.square;
-            setGridState(gridState); 
+            setGridState(prevGridState => {
+              const newGridState = prevGridState.map(row => row.slice());
+  
+              newGridState[rowIndex][columnIndex] = cellState.square;
+              return newGridState;
+            });
         } else {
-        gridState[selectedButton.row][selectedButton.column] = cellState.square;
+          setGridState(prevGridState => {
+            const newGridState = prevGridState.map(row => row.slice());
+
+            newGridState[rowIndex][columnIndex] = cellState.square;
+            return newGridState;
+          });
         }
-        setGridState(gridState);
-        selectedButton = {row:0,column:0};
-        setSelectedButton(selectedButton);
+        setSelectedButton({row:0,column:0});
+        setGridState(prevGridState => {
+          const newGridState = prevGridState.map(row => row.slice());
+
+          newGridState[rowIndex][columnIndex] = cellState.square;
+          return newGridState;
+        });
     }
 
     const ageCatButton = () => {
-        action = ActionState.age;
         setAction(ActionState.age);
         setSelectionIndex(0);
         const cats = ageCats[0];
@@ -222,7 +240,6 @@ const WonWindow = () => (
     }
 
     const removeCatButton = () => {
-        action = ActionState.remove;
         setAction(ActionState.remove);
         const currentPlayer = game.getCurPlayer();
         const catArray = Array(0);
@@ -260,8 +277,6 @@ const WonWindow = () => (
                 }
             return newGridState;
           });
-          
-          action = ActionState.place;
           setAction(ActionState.place);
           setRemoveCat(false);
           game.nextPlayer();
@@ -298,7 +313,7 @@ const WonWindow = () => (
                         key={`${rowIndex}-${colIndex}`}
                         state={gridState[rowIndex][colIndex]}
                         game={game}
-                        OnClose={closeCellMenu}
+                        OnClose={(rowIndex, colIndex) => {closeCellMenu(rowIndex, colIndex)}}
                         PlaceFeline={placeFeline}
                         row={rowIndex}
                         column={colIndex}
