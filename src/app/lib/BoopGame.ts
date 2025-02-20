@@ -1,19 +1,12 @@
 import { Cat, SizeType, Player, defaultRows, defaultColumns, defaultKittens, checkResult, Direction } from "./definitions";
 
 export class BoopGame {
-
-    // TODO: If all 8 peices are on the board after booping and it is the players turn, they can either age a kitten or take a Cat off the board
-    // TODO: If 8 felines on the board and you have a 3 in a row after booping, only activate one option
-    // TODO: Return a checkResult to show all group of 3 felines to remove from the board
-
-
     private gameGrid: Cat[][];
     private players: Player[];
     private curPlayer = 0;
 
-    static rowDirection: number[] = [-1,-1,-1, 0,0,0, 1,1,1]
-    static colDirection: number[] = [-1, 0, 1,-1,0,1,-1,0,1]
-    
+    static rowDirection: number[] = [-1,-1,-1, 0,0,0, 1,1,1];
+    static colDirection: number[] = [-1, 0, 1,-1,0,1,-1,0,1];
 
     constructor(rows: number = defaultRows, columns: number = defaultColumns, grid: Cat[][]|null = null){
 
@@ -58,23 +51,6 @@ export class BoopGame {
             const cat = {owner: player, size: size};
             this.gameGrid[row][col] = cat;
             this.BoopAction(row, col, this.gameGrid, size);
-            // Check if won
-            const winner = this.checkWon();
-            if(winner > 0){
-
-            }
-
-            // Check if 8 felines on the board to age/remove one
-            const allFelinesPlayed = this.players[this.curPlayer].felines.cats==0 && this.players[this.curPlayer].felines.kittens == 0;
-            // Check for 3
-            const groups = this.checkForThree();
-            if(groups.length > 0){
-                if(allFelinesPlayed){
-                    
-                }
-
-            }
-            // Show win or choose options from 8 or 3
             return true;
         }
         return false;
@@ -91,24 +67,22 @@ export class BoopGame {
                 }
                 const adjacentR = placedRow + row;
                 const adjacentC = placedCol + col;
+                // Adjacent space is off the board or there is no cat at the space then do nothing
                 if(this.outOfBounds(adjacentR, adjacentC) || grid[adjacentR][adjacentC] == null ){
                     return;
                 } else {
-                    const cat = grid[adjacentR][adjacentC]
-                    // Small cannot boop big
-                    if(size == SizeType.kitten && cat.size == SizeType.cat){
+                    const feline = grid[adjacentR][adjacentC]
+                    // Kitten cannot boop cat
+                    if(size == SizeType.kitten && feline.size == SizeType.cat){
                         return;
                     }
-                    const newR = adjacentR+row
-                    const newC = adjacentC+col
+                    const newR = adjacentR+row;
+                    const newC = adjacentC+col;
     
                     // Cat moved off the board
                     if(this.outOfBounds(newR, newC)){
-                        if(cat.size == SizeType.kitten){
-                            this.players[cat.owner].felines.kittens++
-                        } else {
-                            this.players[cat.owner].felines.cats++
-                        }
+                        this.removeCat(adjacentR, adjacentC);
+                        return;
                     }
     
                     // Check if cat blocked by other cat from moving
@@ -116,10 +90,20 @@ export class BoopGame {
                         return;
                     }
     
-                    this.moveCat(cat, adjacentR, adjacentC, newR, newC)
+                    this.moveCat(feline, adjacentR, adjacentC, newR, newC)
                 }
             });
         });
+    }
+
+    removeCat(row: number, column: number): void {
+        const feline = this.gameGrid[row][column]!;
+        if(feline.size == SizeType.kitten){
+            this.players[feline.owner].felines.kittens++
+        } else {
+            this.players[feline.owner].felines.cats++
+        }
+        this.gameGrid[row][column] = null;
     }
     
     outOfBounds(row: number, col: number): boolean {
@@ -137,22 +121,23 @@ export class BoopGame {
         this.gameGrid[originalRow][originalCol] = null;
         return true;
     }
+
+    needToRemoveCat(): boolean{
+        return this.players[this.curPlayer].felines.cats==0 && this.players[this.curPlayer].felines.kittens == 0;
+    }
     
     ageCat(row: number, col: number): boolean{
-        // TODO validate that there around enough cats to age
         if(this.gameGrid[row][col] == null)
         {
             return false;
         }
         if(this.gameGrid[row][col].size == SizeType.kitten)
         {
-            this.players[this.gameGrid[row][col].owner].felines.kittens--;
-            this.players[this.gameGrid[row][col].owner].felines.cats++;
             this.players[this.gameGrid[row][col].owner].felines.totalBigCats++;
-            this.gameGrid[row][col].size = SizeType.cat;
-            return true;
         }
-        return false;
+        this.gameGrid[row][col].size = SizeType.cat;
+        this.removeCat(row, col);
+        return true;
     }
     
     checkWon(): number{
@@ -163,16 +148,19 @@ export class BoopGame {
                     return playerNum;
                 }
         }
-        
-        // Check if there are 3 big cats in a row
-        for(let row: number = 0; row < this.gameGrid.length; row++)
-        {
-            for(let col = 0; col < this.gameGrid[0].length; col++)
-            {
-                if(this.checkSW(row, col) || this.checkS(row, col) || this.checkSE(row, col) || this.checkE(row, col)){
-                    return this.gameGrid[row][col]!.owner;
-                }
 
+        if(this.players[this.curPlayer].felines.totalBigCats - this.players[this.curPlayer].felines.cats >= 3)
+        {
+            // Check if there are 3 big cats in a row
+            for(let row: number = 0; row < this.gameGrid.length; row++)
+            {
+                for(let col = 0; col < this.gameGrid[0].length; col++)
+                {
+                    if(this.gameGrid[row][col] != null && (this.checkSW(row, col) || this.checkS(row, col) || this.checkSE(row, col) || this.checkE(row, col))){
+                        return this.gameGrid[row][col]!.owner;
+                    }
+
+                }
             }
         }
         return -1;
@@ -182,25 +170,28 @@ export class BoopGame {
     {
         const results: checkResult[] = [];
         // Check if there are 3 big cats in a row
-        for(let row: number = 0; row < this.gameGrid.length-2; row++)
+        for(let row: number = 0; row < this.gameGrid.length; row++)
         {
-            for(let col = 0; col < this.gameGrid[0].length-2; col++)
+            for(let col = 0; col < this.gameGrid[0].length; col++)
             {
-                if(this.checkSW(row, col))
+                if(this.gameGrid[row][col] != null && this.gameGrid[row][col]!.owner == this.curPlayer)
                 {
-                    results.push({row: row, col: col, direction: Direction.SW, owner: this.gameGrid[row][col]!.owner});
-                }
-                if(this.checkS(row, col))
-                {
-                    results.push({row: row, col: col, direction: Direction.S, owner: this.gameGrid[row][col]!.owner});
-                }
-                if(this.checkSE(row, col))
-                {
-                    results.push({row: row, col: col, direction: Direction.SE, owner: this.gameGrid[row][col]!.owner});
-                }
-                if(this.checkE(row, col))
-                {
-                    results.push({row: row, col: col, direction: Direction.E, owner:this.gameGrid[row][col]!.owner});
+                    if(this.checkSW(row, col))
+                    {
+                        results.push({row: row, col: col, direction: Direction.SW, owner: this.gameGrid[row][col]!.owner});
+                    }
+                    if(this.checkS(row, col))
+                    {
+                        results.push({row: row, col: col, direction: Direction.S, owner: this.gameGrid[row][col]!.owner});
+                    }
+                    if(this.checkSE(row, col))
+                    {
+                        results.push({row: row, col: col, direction: Direction.SE, owner: this.gameGrid[row][col]!.owner});
+                    }
+                    if(this.checkE(row, col))
+                    {
+                        results.push({row: row, col: col, direction: Direction.E, owner:this.gameGrid[row][col]!.owner});
+                    }
                 }
             }
         }
@@ -209,7 +200,7 @@ export class BoopGame {
 
     checkSW(row: number, col: number): boolean
     {
-        if(row + 3 > this.gameGrid.length || col - 2 < 0 || this.gameGrid[row][col] == null)
+        if(row + 2 >= this.gameGrid.length || col - 2 < 0)
         {
             return false
         }
@@ -225,7 +216,7 @@ export class BoopGame {
     
     checkS(row: number, col: number): boolean
     {
-        if(row + 3 > this.gameGrid.length || this.gameGrid[row][col] == null)
+        if(row + 2 >= this.gameGrid.length)
         {
             return false
         }
@@ -241,7 +232,7 @@ export class BoopGame {
     
     checkSE(row: number, col: number): boolean
     {
-        if(row + 3 > this.gameGrid.length || col + 3 > this.gameGrid[0].length || this.gameGrid[row][col] == null)
+        if(row + 2 >= this.gameGrid.length || col + 2 >= this.gameGrid[0].length)
         {
             return false
         }
@@ -257,7 +248,7 @@ export class BoopGame {
 
     checkE(row: number, col: number): boolean
     {
-        if(col + 3 > this.gameGrid[0].length || this.gameGrid[row][col] == null)
+        if(col + 2 >= this.gameGrid[0].length)
         {
             return false
         }
@@ -269,5 +260,13 @@ export class BoopGame {
             }
         }
         return false
+    }
+
+    getCurPlayer():number{
+        return this.curPlayer;
+    }
+
+    nextPlayer():void{
+        this.curPlayer = (this.curPlayer+1) % 2;
     }
 }

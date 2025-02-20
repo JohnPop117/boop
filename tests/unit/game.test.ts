@@ -128,6 +128,8 @@ test('checkWon returns true for 3 cats in a row', () =>{
         [null, null, null, null, null, null],
     ];
     const bg = new BoopGame(6,6,grid);
+    bg.getPlayer(0).felines.totalBigCats = bg.getPlayer(0).felines.totalBigCats+3;
+    bg.getPlayer(0).felines.kittens = bg.getPlayer(0).felines.cats-3;
     expect(bg.checkWon()).toBe(0);
 });
 test('checkWon returns true for 3 cats in a column', () =>{
@@ -140,6 +142,8 @@ test('checkWon returns true for 3 cats in a column', () =>{
         [null, null, null, null, null, null],
     ];
     const bg = new BoopGame(6,6,grid);
+    bg.getPlayer(0).felines.totalBigCats = bg.getPlayer(0).felines.totalBigCats+3;
+    bg.getPlayer(0).felines.kittens = bg.getPlayer(0).felines.cats-3;
     expect(bg.checkWon()).toBe(0);
 });
 test('checkWon returns true for 3 cats in a diagonal', () =>{
@@ -156,7 +160,8 @@ test('checkWon returns true for 3 cats in a diagonal', () =>{
     expect(bg.checkS(0,0)).toBe(false);
     expect(bg.checkSE(0,0)).toBe(false);
     expect(bg.checkE(0,0)).toBe(false);
-
+    bg.getPlayer(0).felines.totalBigCats = bg.getPlayer(0).felines.totalBigCats+3;
+    bg.getPlayer(0).felines.kittens = bg.getPlayer(0).felines.kittens-3;
     expect(bg.checkWon()).toBe(0);
 });
 test('checkWon returns true for all cats placed', () =>{
@@ -170,6 +175,7 @@ test('checkWon returns true for all cats placed', () =>{
     bg.placeCat(SizeType.cat, 2,4,0);
     bg.placeCat(SizeType.cat, 4,0,0);
     bg.placeCat(SizeType.cat, 4,2,0);
+    bg.getPlayer(0).felines.kittens = bg.getPlayer(0).felines.kittens-3;
     expect(bg.checkWon()).toBe(0);
 });
 test('checkWon returns false for a grid with no win conditions', () =>{
