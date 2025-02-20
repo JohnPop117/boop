@@ -87,7 +87,8 @@ test('movecat does not moves a cat and returns false if a cat exists in new spac
 test('ageCat ages a kitten and updates player correctly', () => {
     const bg = new BoopGame();
 
-    bg.getGrid()[0][0]= {owner: 0, size: SizeType.kitten};
+    // bg.getGrid()[0][0]= {owner: 0, size: SizeType.kitten};
+    bg.placeCat(SizeType.kitten, 0,0,0);
     expect(bg.ageCat(0,0)).toBe(true);
 
     expect(bg.getPlayer(0).felines.kittens).toEqual(7);
@@ -109,7 +110,7 @@ test('ageCat returns false if no cat exists at location', () => {
 test('ageCat ages does not age a cat and updates player correctly', () => {
     const bg = new BoopGame();
 
-    bg.getGrid()[0][0]= {owner: 0, size: SizeType.kitten};
+    bg.placeCat(SizeType.kitten, 0,0,0);
     expect(bg.ageCat(0,0)).toBe(true);
     expect(bg.ageCat(0,0)).toBe(false);
 
