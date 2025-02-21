@@ -2,7 +2,7 @@
 Boop cat game with react
 
 # Gameplay
-<video width="630" height="300" src="https://github.com/JohnPop117/boop/blob/main/Videos/Gameplay.mp4"></video>
+https://github.com/user-attachments/assets/7a3ec965-56db-4cd1-8a4c-38ad6958ccf3
 
 
 ## Goal
