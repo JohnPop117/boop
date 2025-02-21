@@ -7,7 +7,6 @@ import Modal from 'react-modal';
 import { BoopGame } from '../lib/BoopGame';
 import { checkResult, SizeType, Direction } from '../lib/definitions';
 
-const bg = new BoopGame();
 enum cellState {
     square,
     age,
@@ -26,19 +25,19 @@ enum ActionState {
 
 Modal.setAppElement('body'); // This line is required for accessibility
 
-const CellButton = ({state, game, OpenCellMenu, OnClose, PlaceFeline, row, column, RemoveCatAction}:{state:cellState, game:BoopGame, OpenCellMenu:(row:number, columnn:number)=>void, OnClose:(row:number, column:number)=>void, PlaceFeline:(size:SizeType, rowIndex:number, columnIndex:number)=>void, row:number, column:number, RemoveCatAction:(row:number, columnn:number)=>void}) => (
+const CellButton = ({testid, state, game, OpenCellMenu, OnClose, PlaceFeline, row, column, RemoveCatAction}:{testid:string, state:cellState, game:BoopGame, OpenCellMenu:(row:number, columnn:number)=>void, OnClose:(row:number, column:number)=>void, PlaceFeline:(size:SizeType, rowIndex:number, columnIndex:number)=>void, row:number, column:number, RemoveCatAction:(row:number, columnn:number)=>void}) => (
     <div className="player-cat">
-        { 
+        {
             game.getGrid()[row][column] !== null ? 
                 game.getGrid()[row][column]?.owner==0 ? 
                     game.getGrid()[row][column]?.size == SizeType.kitten ? 
-                        <Image style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} width={100} height={100} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}}  src="/BlackKitten.png" alt="Player 0 kitten"  /> :
-                    <Image style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={45} height={45} src="/BlackAdultCat.png" alt="Player 0 cat"  /> : 
+                        <Image data-testid={`${testid}-p0-kitten`} style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} width={100} height={100} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}}  src="/BlackKitten.png" alt="Player 0 kitten"  /> :
+                    <Image data-testid={`${testid}-p0-cat`} style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={45} height={45} src="/BlackAdultCat.png" alt="Player 0 cat"  /> : 
                 game.getGrid()[row][column]?.size == SizeType.kitten ? 
-                    <Image style={state == cellState.remove || state==cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={100} height={100} src="/CalicoKitten.png" alt="Player 1 kitten"  /> :
-                <Image style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={45} height={45} src="/CalicoAdultCat.png" alt="Player 1 cat"  />:
+                    <Image data-testid={`${testid}-p1-kitten`} style={state == cellState.remove || state==cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={100} height={100} src="/CalicoKitten.png" alt="Player 1 kitten"  /> :
+                <Image data-testid={`${testid}-p0-cat`} style={state == cellState.remove || state == cellState.age ? {border: "5px solid red"}: {}} onClick={state == cellState.remove ? () => RemoveCatAction(row, column): ()=>{}} width={45} height={45} src="/CalicoAdultCat.png" alt="Player 1 cat"  />:
             state != cellState.menu ? 
-                <button className="grid-button" onClick={() => {OpenCellMenu(row, column)}}>
+                <button data-testid={`${testid}-square`} className="grid-button" onClick={() => {OpenCellMenu(row, column)}}>
                     <Image width={100} height={100} src="/square.png" alt="Empty Square"  />
                 </button>  :
             <CellMenu game={game} OnClose={() =>OnClose(row, column)} rowIndex={row} columnIndex={column} PlaceFeline={PlaceFeline}/>
@@ -50,20 +49,20 @@ const AgeSelection = ({ageCatsArray, ageCatButton, nextAgeGroup, ageCatAction, a
     <div>
         {
             ageCatsArray.length > 0  && actionState == ActionState.pending ? 
-                <button onClick={ageCatButton}>Choose to age cats</button> :
+                <button data-testid="choose-to-age-button" onClick={ageCatButton}>Choose to age cats</button> :
             
                 ageCatsArray.length > 1 && actionState == ActionState.age ?
                     <div>
-                        <button onClick={nextAgeGroup}>
+                        <button data-testid="next-age-button" onClick={nextAgeGroup}>
                             Next
                         </button>
-                        <button onClick={ageCatAction}>
+                        <button data-testid="age-button" onClick={ageCatAction}>
                             Age
                         </button>
                     </div>     
                 : ageCatsArray.length > 0 ?
                     <div>
-                        <button onClick={ageCatAction}>
+                        <button data-testid="age-button"onClick={ageCatAction}>
                             Age
                         </button>
                     </div>
@@ -76,19 +75,19 @@ const AgeSelection = ({ageCatsArray, ageCatButton, nextAgeGroup, ageCatAction, a
 const CellMenu = ({game, rowIndex, columnIndex, OnClose, PlaceFeline}:{game:BoopGame, rowIndex:number, columnIndex:number, OnClose:(row:number, col:number)=> void, PlaceFeline:(size:SizeType, rowIndex:number, columnIndex:number)=>void}) => (
     <div className="player-cat">
         <p>
-        {game.getPlayer(game.getCurPlayer()).felines.kittens > 0 ? <button onClick={() =>{PlaceFeline(SizeType.kitten, rowIndex, columnIndex)} }>Kitten</button>:  false }
+        {game.getPlayer(game.getCurPlayer()).felines.kittens > 0 ? <button data-testid="place-kitten-button" onClick={() =>{PlaceFeline(SizeType.kitten, rowIndex, columnIndex)} }>Kitten</button>:  false }
         </p>
         <p>
-        {game.getPlayer(game.getCurPlayer()).felines.cats > 0 ? <button onClick={() => {PlaceFeline(SizeType.cat, rowIndex, columnIndex)}}>Cat</button>: false}
+        {game.getPlayer(game.getCurPlayer()).felines.cats > 0 ? <button data-testid="place-cat-button" onClick={() => {PlaceFeline(SizeType.cat, rowIndex, columnIndex)}}>Cat</button>: false}
         </p>
-        <button className="grid-button" onClick={() => OnClose(rowIndex, columnIndex)}>Close</button>
+        <button className="grid-button" data-testid="close-menu-button" onClick={() => OnClose(rowIndex, columnIndex)}>Close</button>
     </div>
 )
 
 const ReactBoopGame = () => {
     const [selectedButton, setSelectedButton] = useState({row:0, column:0});
     const [gridState, setGridState] = useState(Array(6).fill(Array(6).fill(cellState.square)))
-    const [game, setGame] = useState(bg);
+    const [game, setGame] = useState(new BoopGame);
     const [removeCat, setRemoveCat] = useState(false);
     const [ageCats, setAgeCats] = useState(Array(0));
     const [action, setAction] = useState(ActionState.place);
@@ -115,7 +114,7 @@ const ReactBoopGame = () => {
     const nextAgeGroup = () => {
         let cats = ageCats[selectionIndex];
         setGridState(prevGridState => {
-            const newGridState = prevGridState.map(row => row.slice());
+            const newGridState = prevGridState;
             let rowDelta = cats.direction == Direction.E ? 0 : -1;
             let colDelta = (cats.direction == Direction.E  || cats.direction == Direction.SE) ? 1 : cats.direction == Direction.S ? 0: cats.direction == Direction.SW ? -1: 0;
             for(let i = 0; i < 3; i++) {
@@ -146,16 +145,20 @@ const ReactBoopGame = () => {
 
     const Restart = ({text}:{text:string}) => (
         <div>
-            <button onClick={() => {
-                setGame(new BoopGame());
-                setGridState(Array(6).fill(Array(6).fill(cellState.square)));
-                setAction(ActionState.place);
+            <button data-testid={`${text}-button`} onClick={() => {
+              setSelectedButton({row:0, column:0});
+              setGridState(Array(6).fill(Array(6).fill(cellState.square)))
+              setGame(new BoopGame());
+              setRemoveCat(false);
+              setAgeCats(Array(0));
+              setAction(ActionState.place);
+              setSelectionIndex(0);
             }}>{text}</button>
         </div>
     )
 
 const WonWindow = () => (
-  <Modal isOpen={action==ActionState.gameover}>
+  <Modal data-testid="won-window" isOpen={action==ActionState.gameover}>
     <h2>Winner: Player {game.getCurPlayer()}</h2>
         <Restart
             text="Play Again">
@@ -164,7 +167,7 @@ const WonWindow = () => (
 );
 
     const placeFeline = (size: SizeType, rowIndex:number, columnIndex:number) =>{
-        if(game.placeCat(size, rowIndex, columnIndex, bg.getCurPlayer())){
+        if(game.placeCat(size, rowIndex, columnIndex, game.getCurPlayer())){
             const winner = game.checkWon();
             if(winner >= 0)
             {
@@ -284,10 +287,10 @@ const WonWindow = () => (
 
     return (
         <div>
-            Player:{game.getCurPlayer()}
+            <span data-testid="active-player">Player:{game.getCurPlayer()}</span>
             <p>
             {removeCat ? 
-                <button onClick={removeCatButton}>Remove Cat</button> : false
+                <button data-testid="removebutton" onClick={removeCatButton}>Remove Cat</button> : false
             }
             </p>
             {
@@ -301,9 +304,9 @@ const WonWindow = () => (
             }
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Image className="player-cat" height={50} width={50} src='/BlackAdultCat.png' alt="Black Adult Cat"/>
-                <span style={{ margin: '0 10px' }}>{game.getPlayer(0).felines.cats}</span>
+                <span data-testid="p0-cat-count" style={{ margin: '0 10px' }}>{game.getPlayer(0).felines.cats}</span>
                 <Image className='player-cat' height={50} width={50} src='/BlackKitten.png'  alt="Black Kitten"/>
-                <span style={{ margin: '0 10px' }}>{game.getPlayer(0).felines.kittens}</span>
+                <span data-testid="p0-kitten-count" style={{ margin: '0 10px' }}>{game.getPlayer(0).felines.kittens}</span>
             </div>
             <div className="grid-container">
                 {[...Array(6)].map((_, rowIndex) => (
@@ -311,6 +314,7 @@ const WonWindow = () => (
                     {[...Array(6)].map((cell, colIndex) => (
                     <CellButton 
                         key={`${rowIndex}-${colIndex}`}
+                        testid={`${rowIndex}-${colIndex}`}
                         state={gridState[rowIndex][colIndex]}
                         game={game}
                         OnClose={(rowIndex, colIndex) => {closeCellMenu(rowIndex, colIndex)}}
@@ -327,9 +331,9 @@ const WonWindow = () => (
             <WonWindow/>
             <div style={{ display: 'flex', alignItems: 'center' }}>
                 <Image className="player-cat" height={50} width={50} src="/CalicoAdultCat.png" alt="Calico Adult Cat"/>
-                <span style={{ margin: '0 10px' }}>{game.getPlayer(1).felines.cats}</span>
+                <span data-testid="p1-cat-count" style={{ margin: '0 10px' }}>{game.getPlayer(1).felines.cats}</span>
                 <Image className="player-cat" height={50} width={50} src='/CalicoKitten.png' alt="Calico Kitten"/>
-                <span style={{ margin: '0 10px' }}>{game.getPlayer(1).felines.kittens}</span>
+                <span data-testid="p1-kitten-count" style={{ margin: '0 10px' }}>{game.getPlayer(1).felines.kittens}</span>
             </div>
             <div>
                 <Restart
