@@ -166,7 +166,7 @@ const WonWindow = () => (
     const placeFeline = (size: SizeType, rowIndex:number, columnIndex:number) =>{
         if(game.placeCat(size, rowIndex, columnIndex, bg.getCurPlayer())){
             const winner = game.checkWon();
-            if(winner > 0)
+            if(winner >= 0)
             {
                 setAction(ActionState.gameover);
             } else // no winner
