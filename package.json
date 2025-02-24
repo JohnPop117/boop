@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "npx jest"
+    "test": "npx jest game"
   },
   "dependencies": {
     "@types/react-modal": "^3.16.3",
