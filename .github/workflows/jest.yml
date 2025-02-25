@@ -7,16 +7,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  check-dependency:
+    name: Check Dependency
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '23.x'
-    
-    - name: Download build artifacts
-      uses: actions/github-script@v7
+      - name: Fail if not triggered by build workflow
+        if: github.event_name == 'workflow_dispatch' && github.event.workflow_run == null
+        run: |
+          echo "This workflow must be triggered by the 'Build React App' workflow."
+          echo "Manual runs are allowed only for debugging purposes when you're certain a successful build exists."
+          exit 1
+      
+      - name: Fail if build workflow failed
+        if: github.event.workflow_run != null && github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "The 'Build React App' workflow did not complete successfully."
+          echo "This workflow requires a successful build."
+          exit 1
+      
+      - name: Dependency check passed
+        run: echo "Dependency check passed, proceeding with tests."
+
+  test:
+    name: Run Jest Tests
+    runs-on: ubuntu-latest
+    needs: check-dependency
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '23.x'
+      
+      - name: Download build artifacts
+        uses: actions/github-script@v7
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -32,23 +56,23 @@ jobs:
               archive_format: 'zip'
             });
             require('fs').writeFileSync('build-output.zip', Buffer.from(download.data));
-      
-    - name: Extract build artifact
-      run: |
-        mkdir -p build
-        unzip build-output.zip -d build
+        
+      - name: Extract build artifact
+        run: |
+          mkdir -p build
+          unzip build-output.zip -d build
 
-    - name: run test
-      run: npm run test
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage
-        path: coverage/
-        retention-days: 5
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test_results
-        path: test/.jest-test-results.json
-        retention-days: 5
+      - name: run test
+        run: npm run test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test_results
+          path: test/.jest-test-results.json
+          retention-days: 5
