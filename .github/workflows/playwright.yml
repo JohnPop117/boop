@@ -1,7 +1,7 @@
 name: Playwright Tests
 on:
   workflow_run:
-    workflows: ["Build Boop", "build"]
+    workflows: [Build Boop]
     types:
       - completed
   workflow_dispatch:
