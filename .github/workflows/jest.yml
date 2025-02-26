@@ -1,7 +1,7 @@
 name: Jest Tests
 on:
   workflow_run:
-    workflows: [Build Boop, build, "Build Boop"]
+    workflows: [build]
     types: [requested]
 
 jobs:
