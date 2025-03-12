@@ -249,7 +249,6 @@ const ReactBoopGame = () => {
 
     return (
             <div>
-                <span data-testid="active-player">Player:{game.getCurPlayer()}</span>
                 <p>
                 {removeCat ? 
                     <button data-testid="removebutton" onClick={removeCatButton}>Remove Cat</button> : false
@@ -270,6 +269,7 @@ const ReactBoopGame = () => {
                     <img className='player-cat' height={50} width={50} src='/BlackKitten.png'  alt="Black Kitten"/>
                     <span data-testid="p0-kitten-count" style={{ margin: '0 10px' }}>{game.getPlayer(0).felines.kittens}</span>
                 </div>
+                <span className="active-player" data-testid="active-player">Player:{game.getCurPlayer()}</span>
                 <div className="game-container">
                     <div className="main-container">
                         <div className="grid-container">
