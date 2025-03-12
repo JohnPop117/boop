@@ -44,3 +44,11 @@ export enum Direction {
 export const defaultRows = 6;
 export const defaultColumns = 6;
 export const defaultKittens = 8;
+
+export enum cellState {
+    square,
+    age,
+    feline,
+    menu,
+    remove
+}
