@@ -43,3 +43,8 @@
 .remove-border {
   border: 5px solid red
 }
+.active-player {
+  text-align:center;
+  position: absolute;
+  left: 49%;
+}
